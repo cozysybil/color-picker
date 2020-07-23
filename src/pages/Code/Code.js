@@ -15,6 +15,7 @@ const Code = ({ setupCode, codeSetting }) => {
         })
     );
     const [colorCode, setColorCode] = useState(allCodeInPattern[codeArr[i]]);
+    const breakerCode = [0, 0, 0.2, 1]
 
     const useInterval = (callback, intervalDelay) => {
         const savedCallback = useRef();
@@ -46,7 +47,7 @@ const Code = ({ setupCode, codeSetting }) => {
 
     useEffect(() => {
         if (i < 0) {
-            setColorCode([0, 1, 1, 1]);
+            setColorCode(breakerCode);
         } else {
             setColorCode(allCodeInPattern[codeArr[i]]);
         }
