@@ -11,7 +11,7 @@ import "./Setcode.css";
 
 const Setcode = ({ showCode }) => {
     const [pattern, setPattern] = useState(4);
-    const [duration, setDuration] = useState(3);
+    const [duration, setDuration] = useState(0.5);
     const [code, setCode] = useState("");
     const [isSubmitEnable, setIsSubmitEnable] = useState(false);
     const [exampleCode, setExampleCode] = useState("0123");
@@ -119,9 +119,21 @@ const Setcode = ({ showCode }) => {
                     <ToggleButtonGroup
                         type="radio"
                         name="duration"
-                        defaultValue={3}
-                        onChange={(val) => setDuration(parseInt(val))}
+                        defaultValue={0.5}
+                        onChange={(val) => setDuration(parseFloat(val))}
                     >
+                        <ToggleButton variant="info" value={0.1}>
+                            0.1
+                        </ToggleButton>
+                        <ToggleButton variant="info" value={0.25}>
+                            0.25
+                        </ToggleButton>
+                        <ToggleButton variant="info" value={0.5}>
+                            0.5
+                        </ToggleButton>
+                        <ToggleButton variant="info" value={0.75}>
+                            0.75
+                        </ToggleButton>
                         <ToggleButton variant="info" value={1}>
                             1
                         </ToggleButton>
@@ -133,12 +145,6 @@ const Setcode = ({ showCode }) => {
                         </ToggleButton>
                         <ToggleButton variant="info" value={4}>
                             4
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={5}>
-                            5
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={6}>
-                            6
                         </ToggleButton>
                     </ToggleButtonGroup>
                 </Col>
