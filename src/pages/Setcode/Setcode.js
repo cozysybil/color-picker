@@ -11,7 +11,7 @@ import "./Setcode.css";
 
 const Setcode = ({ showCode }) => {
   const [pattern, setPattern] = useState(4);
-  const [duration, setDuration] = useState(1);
+  const [duration, setDuration] = useState(3);
   const [code, setCode] = useState("");
   const [isSubmitEnable, setIsSubmitEnable] = useState(false);
   const [exampleCode, setExampleCode] = useState("0123");
