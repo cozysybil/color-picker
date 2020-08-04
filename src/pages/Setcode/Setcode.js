@@ -1,182 +1,180 @@
-import React, { useState, useEffect } from "react";
-import {
-    Container,
-    Row,
-    Col,
-    Button,
-    ToggleButtonGroup,
-    ToggleButton,
-} from "react-bootstrap";
-import "./Setcode.css";
+import React, { useState, useEffect, useRef } from "react";
+import { hsla } from "polished";
+import { Grid, TextField } from "@material-ui/core";
+import DropdownList from "../../common/DropdownList/DropdownList";
+import { generateHslaColors } from "../../utils/colorGenerator";
 
-const Setcode = ({ showCode }) => {
+const patterns = [4, 8, 16];
+const durations = [0.1, 0.25, 0.5, 0.75, 1, 2, 3, 4];
+
+const Setcode = () => {
     const [pattern, setPattern] = useState(4);
-    const [duration, setDuration] = useState(0.5);
+    const [duration, setDuration] = useState(0.1);
     const [code, setCode] = useState("");
-    const [isSubmitEnable, setIsSubmitEnable] = useState(false);
-    const [exampleCode, setExampleCode] = useState("0123");
+    const [exampleCode, setExampleCode] = useState("");
+
+    const [allCodeInPattern, setAllCodeInPattern] = useState(null);
+    const [i, setI] = useState(-1);
+    const [codeArr, setCodeArr] = useState([]);
+    const breakerCode = [0, 0, 0.2, 1];
+    const [colorCode, setColorCode] = useState(breakerCode);
+
+    const [polling, setPolling] = useState(null);
+
     const minCodeLen = 1;
     const maxCodeLen = 10;
 
-    const handleSubmit = () => {
-        if (isSubmitEnable) {
-            showCode({ pattern, duration, code });
-        }
-    };
-
-    useEffect(() => {
-        switch (pattern) {
-            case 8:
-                setExampleCode(
-                    `length : ${minCodeLen}-${maxCodeLen} (must be [0-7])`
-                );
-                break;
-            case 16:
-                setExampleCode(
-                    `length : ${minCodeLen}-${maxCodeLen} (must be [0-9a-fA-F])`
-                );
-                break;
-            default:
-                setExampleCode(
-                    `length : ${minCodeLen}-${maxCodeLen} (must be [0-3])`
-                );
-                break;
-        }
-    }, [pattern]);
-
-    useEffect(() => {
+    const handleTextFieldInput = (e) => {
+        const input = e.target.value;
         switch (pattern) {
             case 8:
                 const regex8 = /^[0-7]*$/;
-                if (
-                    regex8.test(code) &&
-                    code.length >= minCodeLen &&
-                    code.length <= maxCodeLen
-                ) {
-                    setIsSubmitEnable(true);
-                } else {
-                    setIsSubmitEnable(false);
+                if (regex8.test(input)) {
+                    setCode(input);
                 }
                 break;
             case 16:
                 const regex16 = /^[0-9a-fA-F]*$/;
-                if (
-                    regex16.test(code) &&
-                    code.length >= minCodeLen &&
-                    code.length <= maxCodeLen
-                ) {
-                    setIsSubmitEnable(true);
-                } else {
-                    setIsSubmitEnable(false);
+                if (regex16.test(input)) {
+                    setCode(input);
                 }
                 break;
             default:
-                //   if code == digit(0-9)(4) setIsSubmitEnable(true)
                 const regex4 = /^[0-3]*$/;
-                if (
-                    regex4.test(code) &&
-                    code.length >= minCodeLen &&
-                    code.length <= maxCodeLen
-                ) {
-                    setIsSubmitEnable(true);
-                } else {
-                    setIsSubmitEnable(false);
+                if (regex4.test(input)) {
+                    setCode(input);
                 }
                 break;
         }
-    }, [pattern, code]);
+    };
+
+    useEffect(() => {
+        if (setCodeArr.length) {
+            setPolling(duration * 1000);
+        }
+    }, [duration]);
+
+    useEffect(() => {
+        switch (pattern) {
+            case 8:
+                setExampleCode(`[0-7], max 10 chars`);
+                break;
+            case 16:
+                setExampleCode(`[0-9a-fA-F], max 10 chars`);
+                break;
+            default:
+                setExampleCode(`[0-3], max 10 chars`);
+                break;
+        }
+        setAllCodeInPattern(generateHslaColors(pattern));
+    }, [pattern]);
+
+    useEffect(() => {
+        if (pattern === 16) {
+            setCodeArr(
+                code.split("").map((digit) => {
+                    return parseInt(Number(`0x${digit}`), 10);
+                })
+            );
+        } else {
+            setCodeArr(code.split(""));
+        }
+        setPolling(duration * 1000);
+        if (!code.length) {
+            setI(-1);
+            setPolling(null);
+        }
+    }, [code]);
+
+    const useInterval = (callback, intervalDelay) => {
+        const savedCallback = useRef();
+
+        useEffect(() => {
+            savedCallback.current = callback;
+        }, [callback]);
+
+        useEffect(() => {
+            const tick = () => {
+                savedCallback.current();
+            };
+            if (intervalDelay !== null) {
+                const id = setInterval(tick, intervalDelay);
+                return () => clearInterval(id);
+            }
+        }, [intervalDelay]);
+    };
+
+    useInterval(() => {
+        if (i < codeArr.length - 1) {
+            setI(i + 1);
+        } else if (i < 0) {
+            setI(0);
+        } else {
+            setI(-1);
+        }
+    }, [polling]);
+
+    useEffect(() => {
+        if (i < 0) {
+            setColorCode(breakerCode);
+        } else {
+            if (codeArr.length) {
+                setColorCode(allCodeInPattern[codeArr[i]]);
+            }
+        }
+    }, [i]);
 
     return (
-        <Container>
-            <Row>
-                <Col>
-                    <label>Pattern</label>
-                </Col>
-                <Col md="auto">
-                    <ToggleButtonGroup
-                        type="radio"
-                        name="pattern"
-                        defaultValue={4}
-                        onChange={(val) => setPattern(parseInt(val))}
-                    >
-                        <ToggleButton variant="info" value={4}>
-                            4
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={8}>
-                            8
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={16}>
-                            16
-                        </ToggleButton>
-                    </ToggleButtonGroup>
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <label>Duration (seconds)</label>
-                </Col>
-                <Col md="auto">
-                    <ToggleButtonGroup
-                        type="radio"
-                        name="duration"
-                        defaultValue={0.5}
-                        onChange={(val) => setDuration(parseFloat(val))}
-                    >
-                        <ToggleButton variant="info" value={0.1}>
-                            0.1
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={0.25}>
-                            0.25
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={0.5}>
-                            0.5
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={0.75}>
-                            0.75
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={1}>
-                            1
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={2}>
-                            2
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={3}>
-                            3
-                        </ToggleButton>
-                        <ToggleButton variant="info" value={4}>
-                            4
-                        </ToggleButton>
-                    </ToggleButtonGroup>
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <label>Code</label>
-                </Col>
-                <Col md="auto">
-                    <input
-                        className="form-control"
+        <Grid
+            container
+            direction="row"
+            justify="center"
+            alignItems="flex-start"
+            style={{
+                background: hsla(
+                    colorCode[0], // hue
+                    colorCode[1], // saturation
+                    colorCode[2], // lightness
+                    colorCode[3] // alpha
+                ),
+                height: "100vh",
+            }}
+        >
+            <Grid
+                container
+                direction="row"
+                justify="center"
+                alignItems="center"
+            >
+                <DropdownList
+                    arr={patterns}
+                    label="Pattern"
+                    setValue={(selectedItem) => setPattern(selectedItem)}
+                />
+                <DropdownList
+                    arr={durations}
+                    label="Duration (seconds)"
+                    setValue={(selectedItem) => setDuration(selectedItem)}
+                />
+                <Grid>
+                    <TextField
+                        fullWidth
                         placeholder={exampleCode}
-                        maxLength={maxCodeLen}
-                        onChange={(e) => setCode(e.target.value)}
+                        onChange={(e) => handleTextFieldInput(e)}
                         value={code}
+                        id="name"
+                        label="Code"
+                        type="text"
+                        inputProps={{ maxLength: maxCodeLen }}
                     />
-                </Col>
-            </Row>
-            <Row style={{ marginTop: "5vh" }}>
-                <Col md="auto">
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={!isSubmitEnable}
-                        variant="success"
-                        size="lg"
-                        block
-                    >
-                        submit
-                    </Button>
-                </Col>
-            </Row>
-        </Container>
+                    <Grid style={{ fontSize: "15px" }}>
+                        now : {codeArr[i] >= 0 ? codeArr[i] : "-"} hsla(
+                        {colorCode[0]},{colorCode[1]},{colorCode[2]},
+                        {colorCode[3]})
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
     );
 };
 
